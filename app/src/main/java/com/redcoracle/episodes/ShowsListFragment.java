@@ -55,6 +55,7 @@ import androidx.loader.content.Loader;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.request.RequestOptions;
 import com.redcoracle.episodes.db.EpisodesTable;
 import com.redcoracle.episodes.db.ShowsProvider;
 import com.redcoracle.episodes.db.ShowsTable;
@@ -225,8 +226,7 @@ public class ShowsListFragment
 					projection,
 					null,
 					null,
-					ShowsTable.COLUMN_STARRED + " DESC," +
-							ShowsTable.COLUMN_NAME + " ASC");
+					ShowsTable.COLUMN_NAME + " ASC");
 
 		} else if (id == LOADER_ID_EPISODES) {
 			final String[] projection = {
@@ -469,11 +469,12 @@ public class ShowsListFragment
 
 			bannerView.setImageResource(R.drawable.blank_show_banner);
 			if (bannerPath != null && !bannerPath.equals("")) {
-				final String bannerUrl = String.format("https://artworks.thetvdb.com/banners/%s", bannerPath);
+				final String bannerUrl = String.format("https://image.tmdb.org/t/p/original/%s", bannerPath);
 
 				Glide.with(convertView)
 						.load(bannerUrl)
 						.diskCacheStrategy(DiskCacheStrategy.RESOURCE)
+						.apply(new RequestOptions().centerCrop())
 						.placeholder(R.drawable.blank_show_banner)
 						.into(bannerView);
 			}

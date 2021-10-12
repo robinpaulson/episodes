@@ -17,8 +17,9 @@
   public *;
 }
 
-# TVDB
--keep class com.uwetrottmann.thetvdb.entities.** { *; }
+# TMDB
+-keep class com.uwetrottmann.tmdb2.entities.** { *; }
+-keep class com.uwetrottmann.tmdb2.enumerations.** { *; }
 
 # R8 said to add these
 -dontwarn kotlin.coroutines.Continuation
