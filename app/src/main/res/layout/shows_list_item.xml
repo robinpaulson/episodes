@@ -25,7 +25,7 @@
         android:paddingTop="2dp"
         android:paddingLeft="4dp"
         android:paddingStart="2dp"
-        android:textSize="24sp"
+        android:textSize="22sp"
         android:textColor="#FBFBFB"
         android:shadowColor="#7F000000"
         android:shadowDx="2"
