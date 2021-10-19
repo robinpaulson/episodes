@@ -20,7 +20,6 @@ import com.redcoracle.episodes.tvdb.Episode;
 import com.redcoracle.episodes.tvdb.Show;
 
 import java.util.LinkedList;
-import java.util.List;
 import java.util.concurrent.Callable;
 
 public class AddShowTask implements Callable<Void> {
@@ -57,7 +56,7 @@ public class AddShowTask implements Callable<Void> {
     private boolean checkAlreadyAdded(Show show) {
         final String[] projection = {};
         String selection = String.format("%s=?", ShowsTable.COLUMN_TMDB_ID);
-        List<String> selectionArgs = new LinkedList<>();
+        LinkedList<String> selectionArgs = new LinkedList<>();
         selectionArgs.add(Integer.valueOf(show.getTmdbId()).toString());
 
         if (show.getTvdbId() > 0) {

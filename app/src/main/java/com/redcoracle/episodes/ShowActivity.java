@@ -241,7 +241,7 @@ public class ShowActivity
 				placeholder.setStrokeWidth(5f);
 				placeholder.setCenterRadius(60f);
 				placeholder.start();
-				final String artUrl = String.format("https://image.tmdb.org/t/p/original/%s", posterPath);
+				final String artUrl = String.format("https://image.tmdb.org/t/p/w1280/%s", posterPath);
 				Glide.with(this)
 					.load(artUrl)
 					.placeholder(placeholder)

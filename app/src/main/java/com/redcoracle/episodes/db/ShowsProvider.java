@@ -27,6 +27,7 @@ import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteStatement;
 import android.net.Uri;
 import android.util.Log;
 
@@ -34,9 +35,12 @@ import androidx.annotation.NonNull;
 
 import com.redcoracle.episodes.BuildConfig;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+
 public class ShowsProvider extends ContentProvider {
     private static final String TAG = "ShowsProvider";
-    private static final String URI_AUTHORITY = BuildConfig.APPLICATION_ID + ".db.ShowsProvider";
+    public static final String URI_AUTHORITY = BuildConfig.APPLICATION_ID + ".db.ShowsProvider";
 
     private static final Uri CONTENT_URI_BASE =
             Uri.parse(ContentResolver.SCHEME_CONTENT + "://" + ShowsProvider.URI_AUTHORITY);
@@ -233,6 +237,56 @@ public class ShowsProvider extends ContentProvider {
         getContext().getContentResolver().notifyChange(uri, null);
 
         return count;
+    }
+
+    @Override
+    public int bulkInsert(Uri uri, ContentValues[] values) {
+        // Updating episodes is by far the most time consuming operation so this
+        // function only optimises that. Moving to an ORM like Room would be ideal,
+        // but for now this improved syncing a library with ~500 shows/26000 episodes
+        // from 40+ minutes to less than 10.
+        final SQLiteDatabase db = databaseOpenHelper.getWritableDatabase();
+        int inserted;
+        if (uriMatcher.match(uri) == URI_TYPE_EPISODES) {
+            db.beginTransaction();
+            try {
+                for (ContentValues v : values) {
+                    StringBuilder updateBinds = new StringBuilder();
+                    ArrayList<String> bindKeys = new ArrayList<>();
+                    for (Iterator<String> iterator = v.keySet().iterator(); iterator.hasNext(); ) {
+                        String key = iterator.next();
+                        String bindArg = v.getAsString(key);
+                        // Filter out nulls
+                        if (bindArg != null && !key.equals("_id")) {
+                            updateBinds.append(String.format("%s=?", key));
+                            bindKeys.add(key);
+                            if (iterator.hasNext()) {
+                                updateBinds.append(",");
+                            }
+                        }
+                    }
+
+                    SQLiteStatement insert = db.compileStatement(String.format(
+                            "UPDATE %s SET %s WHERE _id=%s",
+                            EpisodesTable.TABLE_NAME,
+                            updateBinds,
+                            v.getAsString("_id")
+                    ));
+                    for (int i = 0; i < bindKeys.size(); i++) {
+                        insert.bindString(i + 1, v.getAsString(bindKeys.get(i)));
+                    }
+                    insert.execute();
+                }
+                db.setTransactionSuccessful();
+            } finally {
+                db.endTransaction();
+                inserted = values.length;
+            }
+        } else {
+            throw new IllegalArgumentException("Unknown URI " + uri);
+        }
+        getContext().getContentResolver().notifyChange(uri, null);
+        return inserted;
     }
 
     @Override
