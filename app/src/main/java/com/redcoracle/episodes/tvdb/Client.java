@@ -39,128 +39,128 @@ import java.util.List;
 import retrofit2.Response;
 
 public class Client {
-	private static final String TAG = Client.class.getName();
+    private static final String TAG = Client.class.getName();
     private final Tmdb tmdb;
 
-	public Client() {
+    public Client() {
         this.tmdb = EpisodesApplication.getInstance().getTmdbClient();
-	}
+    }
 
-	public List<Show> searchShows(String query, String language) {
-		this.tmdb.searchService().tv(query, null, language, null, false);
+    public List<Show> searchShows(String query, String language) {
+        this.tmdb.searchService().tv(query, null, language, null, false);
 
-		try {
-			final TvShowResultsPage results = this.tmdb
-					.searchService()
-					.tv(query, null, language, null, false)
-					.execute()
-					.body();
-			if (results != null) {
-				final SearchShowsParser parser = new SearchShowsParser();
-				return parser.parse(results, language);
-			} else {
-				return new LinkedList<>();
-			}
-		} catch (IOException e) {
-			Log.w(TAG, e);
-			return new LinkedList<>();
-		}
-	}
+        try {
+            final TvShowResultsPage results = this.tmdb
+                    .searchService()
+                    .tv(query, null, language, null, false)
+                    .execute()
+                    .body();
+            if (results != null) {
+                final SearchShowsParser parser = new SearchShowsParser();
+                return parser.parse(results, language);
+            } else {
+                return new LinkedList<>();
+            }
+        } catch (IOException e) {
+            Log.w(TAG, e);
+            return new LinkedList<>();
+        }
+    }
 
-	public Show getShow(HashMap<String, String> showIds, String language) {
-		Show show = null;
-		try {
-			TvShow lookupResult = null;
-			AppendToResponse includes = new AppendToResponse(AppendToResponseItem.EXTERNAL_IDS);
+    public Show getShow(HashMap<String, String> showIds, String language) {
+        Show show = null;
+        try {
+            TvShow lookupResult = null;
+            AppendToResponse includes = new AppendToResponse(AppendToResponseItem.EXTERNAL_IDS);
 
-			if (showIds.get("tmdbId") != null) {
-				int tmdbId = Integer.parseInt(showIds.get("tmdbId"));
-				Response<TvShow> seriesResponse = this.tmdb.tvService().tv(tmdbId, language, includes).execute();
-				if (seriesResponse.isSuccessful() && seriesResponse.body() != null) {
-					lookupResult = seriesResponse.body();
-				}
-			}
+            if (showIds.get("tmdbId") != null) {
+                int tmdbId = Integer.parseInt(showIds.get("tmdbId"));
+                Response<TvShow> seriesResponse = this.tmdb.tvService().tv(tmdbId, language, includes).execute();
+                if (seriesResponse.isSuccessful() && seriesResponse.body() != null) {
+                    lookupResult = seriesResponse.body();
+                }
+            }
 
-			if (lookupResult == null && showIds.get("tvdbId") != null) {
-				Response<FindResults> seriesResponse = this.tmdb.findService().find(
-					showIds.get("tvdbId"),
-					ExternalSource.TVDB_ID,
-					language
-				).execute();
-				if (seriesResponse.isSuccessful() && seriesResponse.body() != null) {
-					if (seriesResponse.body().tv_results.size() > 0) {
-						BaseTvShow sparseShow = seriesResponse.body().tv_results.get(0);
-						lookupResult = tmdb.tvService().tv(sparseShow.id, language, includes).execute().body();
-					}
-				}
-			}
+            if (lookupResult == null && showIds.get("tvdbId") != null) {
+                Response<FindResults> seriesResponse = this.tmdb.findService().find(
+                        showIds.get("tvdbId"),
+                        ExternalSource.TVDB_ID,
+                        language
+                ).execute();
+                if (seriesResponse.isSuccessful() && seriesResponse.body() != null) {
+                    if (seriesResponse.body().tv_results != null && seriesResponse.body().tv_results.size() > 0) {
+                        BaseTvShow sparseShow = seriesResponse.body().tv_results.get(0);
+                        lookupResult = tmdb.tvService().tv(sparseShow.id, language, includes).execute().body();
+                    }
+                }
+            }
 
-			if (lookupResult == null && showIds.get("imbId") != null) {
-				Response<FindResults> seriesResponse = this.tmdb.findService().find(
-						showIds.get("imbId"),
-						ExternalSource.IMDB_ID,
-						language
-				).execute();
-				if (seriesResponse.isSuccessful() && seriesResponse.body() != null) {
-					if (seriesResponse.body().tv_results.size() > 0) {
-						BaseTvShow sparseShow = seriesResponse.body().tv_results.get(0);
-						lookupResult = tmdb.tvService().tv(sparseShow.id, language, includes).execute().body();
-					}
-				}
-			}
+            if (lookupResult == null && showIds.get("imbId") != null) {
+                Response<FindResults> seriesResponse = this.tmdb.findService().find(
+                        showIds.get("imbId"),
+                        ExternalSource.IMDB_ID,
+                        language
+                ).execute();
+                if (seriesResponse.isSuccessful() && seriesResponse.body() != null) {
+                    if (seriesResponse.body().tv_results != null && seriesResponse.body().tv_results.size() > 0) {
+                        BaseTvShow sparseShow = seriesResponse.body().tv_results.get(0);
+                        lookupResult = tmdb.tvService().tv(sparseShow.id, language, includes).execute().body();
+                    }
+                }
+            }
 
-			if (lookupResult != null) {
-				final GetShowParser parser = new GetShowParser();
-				show = parser.parse(lookupResult, language);
-				show.setEpisodes(getEpisodesForShow(lookupResult, language));
-			}
+            if (lookupResult != null) {
+                final GetShowParser parser = new GetShowParser();
+                show = parser.parse(lookupResult, language);
+                show.setEpisodes(getEpisodesForShow(lookupResult, language));
+            }
 
-		} catch (IOException e) {
-			Log.w(TAG, e);
-		}
-		return show;
-	}
+        } catch (IOException e) {
+            Log.w(TAG, e);
+        }
+        return show;
+    }
 
-	public Show getShow(int id, String language, boolean includeEpisodes) {
-		try {
-			Response<TvShow> seriesResponse = this.tmdb.tvService().tv(id, language).execute();
-			Log.d(TAG, String.format("Received response %d: %s", seriesResponse.code(), seriesResponse.message()));
-			if (seriesResponse.isSuccessful() && seriesResponse.body() != null) {
-				final GetShowParser parser = new GetShowParser();
-				final TvShow series = seriesResponse.body();
-				Show show = parser.parse(series, language);
+    public Show getShow(int id, String language, boolean includeEpisodes) {
+        try {
+            Response<TvShow> seriesResponse = this.tmdb.tvService().tv(id, language).execute();
+            Log.d(TAG, String.format("Received response %d: %s", seriesResponse.code(), seriesResponse.message()));
+            if (seriesResponse.isSuccessful() && seriesResponse.body() != null) {
+                final GetShowParser parser = new GetShowParser();
+                final TvShow series = seriesResponse.body();
+                Show show = parser.parse(series, language);
 
-				if (show != null && includeEpisodes) {
+                if (show != null && includeEpisodes) {
                     ArrayList<Episode> episodes = getEpisodesForShow(series, language);
-					show.setEpisodes(episodes);
+                    show.setEpisodes(episodes);
                 }
                 return show;
-			} else {
-				return null;
-			}
-		} catch (IOException e) {
-			Log.w(TAG, e);
-			return null;
-		}
-	}
+            } else {
+                return null;
+            }
+        } catch (IOException e) {
+            Log.w(TAG, e);
+            return null;
+        }
+    }
 
-	public ArrayList<Episode> getEpisodesForShow(TvShow series, String language) {
-		int episode_count = series.number_of_episodes != null ? series.number_of_episodes : 64;
-		ArrayList<Episode> episodes = new ArrayList<>(episode_count);
-		final GetEpisodesParser episodesParser = new GetEpisodesParser();
-		if (series.number_of_seasons != null) {
-			for (TvSeason season : series.seasons) {
-				try {
-					AppendToResponse includes = new AppendToResponse(AppendToResponseItem.EXTERNAL_IDS);
-					season = this.tmdb.tvSeasonsService().season(series.id, season.season_number, language, includes).execute().body();
-					if (season != null) {
-						episodes.addAll(episodesParser.parse(season.episodes));
-					}
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		}
-		return episodes;
-	}
+    public ArrayList<Episode> getEpisodesForShow(TvShow series, String language) {
+        int episode_count = series.number_of_episodes != null ? series.number_of_episodes : 64;
+        ArrayList<Episode> episodes = new ArrayList<>(episode_count);
+        final GetEpisodesParser episodesParser = new GetEpisodesParser();
+        if (series.number_of_seasons != null) {
+            for (TvSeason season : series.seasons) {
+                try {
+                    AppendToResponse includes = new AppendToResponse(AppendToResponseItem.EXTERNAL_IDS);
+                    season = this.tmdb.tvSeasonsService().season(series.id, season.season_number, language, includes).execute().body();
+                    if (season != null) {
+                        episodes.addAll(episodesParser.parse(season.episodes));
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return episodes;
+    }
 }
