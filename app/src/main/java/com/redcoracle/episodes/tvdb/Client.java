@@ -123,7 +123,8 @@ public class Client {
 
     public Show getShow(int id, String language, boolean includeEpisodes) {
         try {
-            Response<TvShow> seriesResponse = this.tmdb.tvService().tv(id, language).execute();
+            AppendToResponse includes = new AppendToResponse(AppendToResponseItem.EXTERNAL_IDS);
+            Response<TvShow> seriesResponse = this.tmdb.tvService().tv(id, language, includes).execute();
             Log.d(TAG, String.format("Received response %d: %s", seriesResponse.code(), seriesResponse.message()));
             if (seriesResponse.isSuccessful() && seriesResponse.body() != null) {
                 final GetShowParser parser = new GetShowParser();
