@@ -121,7 +121,9 @@ public class AddShowTask implements Callable<Void> {
             values[i] = value;
         }
 
-        this.context.getContentResolver().bulkInsert(ShowsProvider.CONTENT_URI_EPISODES, values);
+        for (ContentValues value : values) {
+            this.context.getContentResolver().insert(ShowsProvider.CONTENT_URI_EPISODES, value);
+        }
     }
 
     private void showMessage(String message) {
