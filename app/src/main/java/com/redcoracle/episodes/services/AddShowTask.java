@@ -106,7 +106,7 @@ public class AddShowTask implements Callable<Void> {
 
         for (int i = 0; i < episodes.length; i++) {
             ContentValues value = new ContentValues();
-            value.put(EpisodesTable.COLUMN_TVDB_ID, episodes[i].getId());
+            value.put(EpisodesTable.COLUMN_TVDB_ID, episodes[i].getTvdbId());
             value.put(EpisodesTable.COLUMN_TMDB_ID, episodes[i].getTmdbId());
             value.put(EpisodesTable.COLUMN_IMDB_ID, episodes[i].getImdbId());
             value.put(EpisodesTable.COLUMN_SHOW_ID, showId);
