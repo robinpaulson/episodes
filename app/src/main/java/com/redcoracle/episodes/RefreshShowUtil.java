@@ -142,6 +142,7 @@ public class RefreshShowUtil {
 				}
 			} else {
 				Log.d(TAG, String.format("Found match by TMDB ID: %s", episodeId));
+				seen.add(String.format("%s-%s", episode.getSeasonNumber(), episode.getEpisodeNumber()));
 			}
 
 			if (episode == null) {
