@@ -36,6 +36,7 @@ import org.apache.commons.collections4.map.MultiKeyMap;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 public class RefreshShowUtil {
@@ -102,6 +103,7 @@ public class RefreshShowUtil {
 	private static void updateEpisodes(int showId, List<Episode> episodes, ContentResolver contentResolver) {
 		// TODO: likely performance gains to be had in here
 		final MultiKeyMap seasonPairMap = new MultiKeyMap();
+		final HashSet<String> seen = new HashSet<>();
 		final SparseArray<Episode> episodeMap = new SparseArray<>();
 		final ArrayList<ContentValues> updates = new ArrayList<>();
 
@@ -130,6 +132,13 @@ public class RefreshShowUtil {
 				);
 				if (episode != null) {
 					Log.d(TAG, String.format("Matched by season/episode number: %s", episodeId));
+					if (seen.contains(String.format("%s-%s", episode.getSeasonNumber(), episode.getEpisodeNumber()))) {
+						// Already matched a different episode by season/episode pair,
+						// so this will fail on insert and should be deleted instead.
+						contentResolver.delete(episodeUri, null, null);
+					} else {
+						seen.add(String.format("%s-%s", episode.getSeasonNumber(), episode.getEpisodeNumber()));
+					}
 				}
 			} else {
 				Log.d(TAG, String.format("Found match by TMDB ID: %s", episodeId));
