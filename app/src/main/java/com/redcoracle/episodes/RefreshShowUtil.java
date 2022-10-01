@@ -63,9 +63,9 @@ public class RefreshShowUtil {
 	private static HashMap<String, String> getShowIds(int showId, ContentResolver contentResolver) {
 		final Uri showUri = Uri.withAppendedPath(ShowsProvider.CONTENT_URI_SHOWS, String.valueOf(showId));
 		final String[] projection = {
-				ShowsTable.COLUMN_TVDB_ID,
-				ShowsTable.COLUMN_TMDB_ID,
-				ShowsTable.COLUMN_IMDB_ID
+			ShowsTable.COLUMN_TVDB_ID,
+			ShowsTable.COLUMN_TMDB_ID,
+			ShowsTable.COLUMN_IMDB_ID
 		};
 		final Cursor showCursor = contentResolver.query(showUri, projection, null, null, null);
 		showCursor.moveToFirst();
@@ -132,17 +132,24 @@ public class RefreshShowUtil {
 				);
 				if (episode != null) {
 					Log.d(TAG, String.format("Matched by season/episode number: %s", episodeId));
-					if (seen.contains(String.format("%s-%s", episode.getSeasonNumber(), episode.getEpisodeNumber()))) {
+					if (seen.contains(episode.identifier())) {
 						// Already matched a different episode by season/episode pair,
 						// so this will fail on insert and should be deleted instead.
+						Log.d(TAG, String.format("Deleting duplicate episode %s (%s)",episode.identifier(), episodeId));
 						contentResolver.delete(episodeUri, null, null);
 					} else {
-						seen.add(String.format("%s-%s", episode.getSeasonNumber(), episode.getEpisodeNumber()));
+						seen.add(episode.identifier());
+						episodes.remove(episode);
+						continue;
 					}
 				}
+			} else if (seen.contains(episode.identifier())) {
+				Log.d(TAG, String.format("Deleting previously seen episode %s (%s)", episode.identifier(), episode.getId()));
+				contentResolver.delete(episodeUri, null, null);
+				continue;
 			} else {
 				Log.d(TAG, String.format("Found match by TMDB ID: %s", episodeId));
-				seen.add(String.format("%s-%s", episode.getSeasonNumber(), episode.getEpisodeNumber()));
+				seen.add(episode.identifier());
 			}
 
 			if (episode == null) {

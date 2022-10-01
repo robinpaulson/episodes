@@ -34,6 +34,10 @@ public class Episode {
 	Episode() {
 	}
 
+	public String identifier() {
+		return String.format("%s-%s", this.seasonNumber, this.episodeNumber);
+	}
+
 	public int getId() {
 		return id;
 	}
