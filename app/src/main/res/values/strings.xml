@@ -64,4 +64,8 @@
   <string name="pref_interface_category">Interface</string>
   <string name="version">Version %s (Commit %s)</string>
   <string name="no_search_results_found">No search results found</string>
+  <string name="provider_change_warning_detail">Metadata provider has switched to TMDB. We recommend backing up your database before refreshing all metadata. Press Continue to proceed with refreshing all shows or Cancel to return.</string>
+  <string name="provider_change_warning_title">Metadata Provider Change</string>
+  <string name="provider_change_warning_confirm">Continue</string>
+  <string name="provider_change_warning_cancel">Cancel</string>
 </resources>
