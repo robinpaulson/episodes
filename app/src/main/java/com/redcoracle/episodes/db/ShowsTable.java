@@ -108,7 +108,6 @@ public class ShowsTable {
                         COLUMN_STARRED,
                         COLUMN_TYPE_STARRED));
 
-                // fall through
             case 2:
                 // Add banner path column
                 Log.d(TAG, "upgrading shows table: adding banner path column");
@@ -117,7 +116,6 @@ public class ShowsTable {
                         COLUMN_BANNER_PATH,
                         COLUMN_TYPE_BANNER_PATH));
 
-                // fall through
             case 3:
                 // Add fanart path and poster path columns
                 Log.d(TAG, "upgrading shows table: adding fanart path column");
@@ -132,7 +130,6 @@ public class ShowsTable {
                         COLUMN_POSTER_PATH,
                         COLUMN_TYPE_POSTER_PATH));
 
-                // fall through
             case 4:
                 // Add notes column
                 Log.d(TAG, "upgrading shows table: adding notes column");
@@ -140,7 +137,6 @@ public class ShowsTable {
                         TABLE_NAME,
                         COLUMN_NOTES,
                         COLUMN_TYPE_NOTES));
-                // fall through
             case 5:
                 // Add language column
                 Log.d(TAG, "upgrading shows table: adding language column");
@@ -148,7 +144,6 @@ public class ShowsTable {
                         TABLE_NAME,
                         COLUMN_LANGUAGE,
                         COLUMN_TYPE_LANGUAGE));
-                //fall through
             case 6:
                 // Add archived column
                 Log.d(TAG, "upgrading shows table: adding archived column");
@@ -156,7 +151,7 @@ public class ShowsTable {
                         TABLE_NAME,
                         COLUMN_ARCHIVED,
                         COLUMN_TYPE_ARCHIVED));
-                //fall through
+            case 7:
             case 8:
                 // Add TMDB/IMDB columns
                 db.beginTransaction();
