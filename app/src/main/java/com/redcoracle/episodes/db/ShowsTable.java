@@ -17,6 +17,7 @@
 
 package com.redcoracle.episodes.db;
 
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.provider.BaseColumns;
 import android.util.Log;
@@ -99,88 +100,101 @@ public class ShowsTable {
     }
 
     public static void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        switch (oldVersion) {
-            case 1:
-                // Add starred column
-                Log.d(TAG, "upgrading shows table: adding starred column");
-                db.execSQL(String.format("ALTER TABLE %s ADD COLUMN %s %s",
-                        TABLE_NAME,
-                        COLUMN_STARRED,
-                        COLUMN_TYPE_STARRED));
+        if (oldVersion < 2) {
+            // Add starred column
+            Log.d(TAG, "upgrading shows table: adding starred column");
+            db.execSQL(String.format("ALTER TABLE %s ADD COLUMN %s %s",
+                    TABLE_NAME,
+                    COLUMN_STARRED,
+                    COLUMN_TYPE_STARRED));
+        }
 
-            case 2:
-                // Add banner path column
-                Log.d(TAG, "upgrading shows table: adding banner path column");
-                db.execSQL(String.format("ALTER TABLE %s ADD COLUMN %s %s",
-                        TABLE_NAME,
-                        COLUMN_BANNER_PATH,
-                        COLUMN_TYPE_BANNER_PATH));
+        if (oldVersion < 3) {
+            // Add banner path column
+            Log.d(TAG, "upgrading shows table: adding banner path column");
+            db.execSQL(String.format("ALTER TABLE %s ADD COLUMN %s %s",
+                    TABLE_NAME,
+                    COLUMN_BANNER_PATH,
+                    COLUMN_TYPE_BANNER_PATH));
+        }
 
-            case 3:
-                // Add fanart path and poster path columns
-                Log.d(TAG, "upgrading shows table: adding fanart path column");
-                db.execSQL(String.format("ALTER TABLE %s ADD COLUMN %s %s",
-                        TABLE_NAME,
-                        COLUMN_FANART_PATH,
-                        COLUMN_TYPE_FANART_PATH));
+        if (oldVersion < 4) {
+            // Add fanart path and poster path columns
+            Log.d(TAG, "upgrading shows table: adding fanart path column");
+            db.execSQL(String.format("ALTER TABLE %s ADD COLUMN %s %s",
+                    TABLE_NAME,
+                    COLUMN_FANART_PATH,
+                    COLUMN_TYPE_FANART_PATH));
 
-                Log.d(TAG, "upgrading shows table: adding poster path column");
-                db.execSQL(String.format("ALTER TABLE %s ADD COLUMN %s %s",
-                        TABLE_NAME,
-                        COLUMN_POSTER_PATH,
-                        COLUMN_TYPE_POSTER_PATH));
+            Log.d(TAG, "upgrading shows table: adding poster path column");
+            db.execSQL(String.format("ALTER TABLE %s ADD COLUMN %s %s",
+                    TABLE_NAME,
+                    COLUMN_POSTER_PATH,
+                    COLUMN_TYPE_POSTER_PATH));
+        }
 
-            case 4:
-                // Add notes column
-                Log.d(TAG, "upgrading shows table: adding notes column");
-                db.execSQL(String.format("ALTER TABLE %s ADD COLUMN %s %s",
-                        TABLE_NAME,
-                        COLUMN_NOTES,
-                        COLUMN_TYPE_NOTES));
-            case 5:
-                // Add language column
-                Log.d(TAG, "upgrading shows table: adding language column");
-                db.execSQL(String.format("ALTER TABLE %s ADD COLUMN %s %s",
-                        TABLE_NAME,
-                        COLUMN_LANGUAGE,
-                        COLUMN_TYPE_LANGUAGE));
-            case 6:
-                // Add archived column
-                Log.d(TAG, "upgrading shows table: adding archived column");
-                db.execSQL(String.format("ALTER TABLE %s ADD COLUMN %s %s",
-                        TABLE_NAME,
-                        COLUMN_ARCHIVED,
-                        COLUMN_TYPE_ARCHIVED));
-            case 7:
-            case 8:
-                // Add TMDB/IMDB columns
-                db.beginTransaction();
-                try {
-                    final String temp_table_name = String.format("new_%s", TABLE_NAME);
-                    String create_table = createTableSQL(temp_table_name);
-                    String insert_columns = String.format(
+        if (oldVersion < 5) {
+            // Add notes column
+            Log.d(TAG, "upgrading shows table: adding notes column");
+            db.execSQL(String.format("ALTER TABLE %s ADD COLUMN %s %s",
+                    TABLE_NAME,
+                    COLUMN_NOTES,
+                    COLUMN_TYPE_NOTES));
+        }
+
+        if (oldVersion < 6) {
+            // Add language column
+            Log.d(TAG, "upgrading shows table: adding language column");
+            db.execSQL(String.format("ALTER TABLE %s ADD COLUMN %s %s",
+                    TABLE_NAME,
+                    COLUMN_LANGUAGE,
+                    COLUMN_TYPE_LANGUAGE));
+        }
+
+        if (oldVersion < 7) {
+            // Add archived column
+            Log.d(TAG, "upgrading shows table: adding archived column");
+            db.execSQL(String.format("ALTER TABLE %s ADD COLUMN %s %s",
+                    TABLE_NAME,
+                    COLUMN_ARCHIVED,
+                    COLUMN_TYPE_ARCHIVED));
+        }
+
+        if (oldVersion < 9) {
+            // Add TMDB/IMDB columns
+            db.beginTransaction();
+            try {
+                final String temp_table_name = String.format("new_%s", TABLE_NAME);
+
+                String create_table = createTableSQL(temp_table_name);
+                String insert_columns = String.format(
                         "%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s",
                         COLUMN_ID, COLUMN_TVDB_ID, COLUMN_NAME, COLUMN_LANGUAGE, COLUMN_OVERVIEW,
                         COLUMN_FIRST_AIRED, COLUMN_STARRED, COLUMN_ARCHIVED, COLUMN_BANNER_PATH,
                         COLUMN_FANART_PATH, COLUMN_POSTER_PATH, COLUMN_NOTES
-                    );
-                    db.execSQL(create_table);
-                    db.execSQL(String.format(
+                );
+
+                db.execSQL(create_table);
+                db.execSQL(String.format(
                         "INSERT INTO %s (%s) SELECT %s FROM %s",
                         temp_table_name, insert_columns, insert_columns, TABLE_NAME
-                    ));
-                    db.execSQL(String.format("DROP TABLE %s", TABLE_NAME));
-                    db.execSQL(String.format(
+                ));
+
+                db.execSQL(String.format("DROP TABLE %s", TABLE_NAME));
+                db.execSQL(String.format(
                         "ALTER TABLE %s RENAME TO %s",
                         temp_table_name, TABLE_NAME
-                    ));
-                    final int fk_check = db.rawQuery("PRAGMA foreign_key_check", null).getCount();
-                    if (fk_check == 0) {
-                        db.setTransactionSuccessful();
-                    }
-                } finally {
-                    db.endTransaction();
+                ));
+
+                final Cursor fk_query = db.rawQuery("PRAGMA foreign_key_check", null);
+                final int fk_check = fk_query.getCount();
+                fk_query.close();
+                if (fk_check == 0) {
+                    db.setTransactionSuccessful();
                 }
+            } finally {
+                db.endTransaction();
+            }
         }
     }
 }

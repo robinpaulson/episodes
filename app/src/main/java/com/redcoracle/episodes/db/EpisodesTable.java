@@ -83,44 +83,43 @@ public class EpisodesTable {
     }
 
     static void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        switch (oldVersion) {
-            case 5:
-            case 6:
-            case 7:
-                // Add language column
-                Cursor cursor = db.query(TABLE_NAME, null, null, null, null, null, null);
-                String[] columns = cursor.getColumnNames();
-                if (!Arrays.asList(columns).contains(COLUMN_LANGUAGE)) {
-                    Log.d(TAG, "upgrading episodes table: adding language column");
-                    db.execSQL(String.format("ALTER TABLE %s ADD COLUMN %s TEXT", TABLE_NAME, COLUMN_LANGUAGE));
-                }
-                cursor.close();
-            case 8:
-                // Add TMDB/IMDB columns
-                db.beginTransaction();
-                try {
-                    final String temp_table_name = String.format("new_%s", TABLE_NAME);
-                    String create_table = createTableSQL(temp_table_name);
-                    String insert_columns = String.format(
-                            "%s, %s, %s, %s, %s, %s, %s, %s, %s, %s",
-                            COLUMN_ID, COLUMN_TVDB_ID, COLUMN_SHOW_ID, COLUMN_NAME, COLUMN_LANGUAGE,
-                            COLUMN_OVERVIEW, COLUMN_EPISODE_NUMBER, COLUMN_SEASON_NUMBER,
-                            COLUMN_FIRST_AIRED, COLUMN_WATCHED
-                    );
-                    db.execSQL(create_table);
-                    db.execSQL(String.format(
-                            "INSERT INTO %s (%s) SELECT %s FROM %s",
-                            temp_table_name, insert_columns, insert_columns, TABLE_NAME
-                    ));
-                    db.execSQL(String.format("DROP TABLE %s", TABLE_NAME));
-                    db.execSQL(String.format(
-                            "ALTER TABLE %s RENAME TO %s",
-                            temp_table_name, TABLE_NAME
-                    ));
-                    db.setTransactionSuccessful();
-                } finally {
-                    db.endTransaction();
-                }
+        if (oldVersion <= 7) {
+            // Add language column
+            Cursor cursor = db.query(TABLE_NAME, null, null, null, null, null, null);
+            String[] columns = cursor.getColumnNames();
+            if (!Arrays.asList(columns).contains(COLUMN_LANGUAGE)) {
+                Log.d(TAG, "upgrading episodes table: adding language column");
+                db.execSQL(String.format("ALTER TABLE %s ADD COLUMN %s TEXT", TABLE_NAME, COLUMN_LANGUAGE));
+            }
+            cursor.close();
+        }
+
+        if (oldVersion <= 8) {
+            // Add TMDB/IMDB columns
+            db.beginTransaction();
+            try {
+                final String temp_table_name = String.format("new_%s", TABLE_NAME);
+                String create_table = createTableSQL(temp_table_name);
+                String insert_columns = String.format(
+                        "%s, %s, %s, %s, %s, %s, %s, %s, %s, %s",
+                        COLUMN_ID, COLUMN_TVDB_ID, COLUMN_SHOW_ID, COLUMN_NAME, COLUMN_LANGUAGE,
+                        COLUMN_OVERVIEW, COLUMN_EPISODE_NUMBER, COLUMN_SEASON_NUMBER,
+                        COLUMN_FIRST_AIRED, COLUMN_WATCHED
+                );
+                db.execSQL(create_table);
+                db.execSQL(String.format(
+                        "INSERT INTO %s (%s) SELECT %s FROM %s",
+                        temp_table_name, insert_columns, insert_columns, TABLE_NAME
+                ));
+                db.execSQL(String.format("DROP TABLE %s", TABLE_NAME));
+                db.execSQL(String.format(
+                        "ALTER TABLE %s RENAME TO %s",
+                        temp_table_name, TABLE_NAME
+                ));
+                db.setTransactionSuccessful();
+            } finally {
+                db.endTransaction();
+            }
         }
     }
 }
